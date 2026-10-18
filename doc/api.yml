@@ -1,0 +1,551 @@
+openapi: 3.0.3
+info:
+  title: ascendisk API
+  description: >
+    Binary-options signal indicator for Pocket Option. The API streams 1-minute (M1)
+    forex candles, computes a convergence score (EMA 9/21 trend + RSI 14 momentum +
+    entry-zone strength), exposes BUY/SELL signals only above the 75% precision
+    threshold, blocks OTC weekend windows, and lets the trader track manually placed
+    orders. A Thymeleaf interface (signals / tracking / account tabs) is provided for
+    the ADMIN.
+  version: "1.0.0"
+servers:
+  - url: /
+
+tags:
+  - name: Auth
+  - name: Assets
+    description: Tradable instruments and their payout
+  - name: Signals
+    description: Real-time directional signals
+  - name: Candles
+    description: M1 candle stream for the tracking charts
+  - name: Trades
+    description: Manually placed orders being tracked
+  - name: Account
+    description: Trader account
+
+paths:
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Authenticate and obtain a JWT
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "401":
+          description: Invalid credentials
+
+  /assets:
+    get:
+      tags: [Assets]
+      summary: List tradable assets, optionally only the enabled ones
+      security:
+        - bearerAuth: [ADMIN, TRADER]
+      parameters:
+        - name: enabled
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: List of assets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Asset"
+    post:
+      tags: [Assets]
+      summary: Register a new tradable asset
+      security:
+        - bearerAuth: [ADMIN]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssetInput"
+      responses:
+        "201":
+          description: Asset created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Asset"
+        "409":
+          description: An asset with this symbol already exists
+
+  /assets/{symbol}:
+    put:
+      tags: [Assets]
+      summary: Update an asset (display name, category, payout, enabled flag)
+      security:
+        - bearerAuth: [ADMIN]
+      parameters:
+        - $ref: "#/components/parameters/Symbol"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssetInput"
+      responses:
+        "200":
+          description: Asset updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Asset"
+        "404":
+          description: Asset not found
+
+  /signals:
+    get:
+      tags: [Signals]
+      summary: >
+        Current signal for every enabled asset, sorted by distance to the entry zone
+        (closest to the market first). On the OTC weekend window every signal is
+        neutral and otcClosed is true.
+      security:
+        - bearerAuth: [ADMIN, TRADER]
+      responses:
+        "200":
+          description: List of signals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Signal"
+
+  /signals/{symbol}:
+    get:
+      tags: [Signals]
+      summary: Current signal for a single asset
+      security:
+        - bearerAuth: [ADMIN, TRADER]
+      parameters:
+        - $ref: "#/components/parameters/Symbol"
+      responses:
+        "200":
+          description: Signal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Signal"
+        "404":
+          description: Asset not found
+
+  /assets/{symbol}/candles:
+    get:
+      tags: [Candles]
+      summary: Recent M1 candles for the asset (used by the tracking charts)
+      security:
+        - bearerAuth: [ADMIN, TRADER]
+      parameters:
+        - $ref: "#/components/parameters/Symbol"
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 300
+            default: 60
+      responses:
+        "200":
+          description: Candles, oldest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Candle"
+        "404":
+          description: Asset not found
+
+  /trades:
+    get:
+      tags: [Trades]
+      summary: List tracked trades, most recent first
+      security:
+        - bearerAuth: [ADMIN, TRADER]
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/TradeStatus"
+      responses:
+        "200":
+          description: List of tracked trades
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Trade"
+    post:
+      tags: [Trades]
+      summary: Track a manually placed order (from a signal)
+      security:
+        - bearerAuth: [ADMIN, TRADER]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TradeInput"
+      responses:
+        "201":
+          description: Trade tracked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trade"
+        "400":
+          description: Invalid direction or missing zone price
+        "404":
+          description: Asset not found
+
+  /trades/{tradeId}:
+    get:
+      tags: [Trades]
+      summary: Retrieve one tracked trade
+      security:
+        - bearerAuth: [ADMIN, TRADER]
+      parameters:
+        - $ref: "#/components/parameters/TradeId"
+      responses:
+        "200":
+          description: Trade
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trade"
+        "404":
+          description: Trade not found
+    put:
+      tags: [Trades]
+      summary: Close a tracked trade (result Win/Loss/Draw)
+      security:
+        - bearerAuth: [ADMIN, TRADER]
+      parameters:
+        - $ref: "#/components/parameters/TradeId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TradeUpdate"
+      responses:
+        "200":
+          description: Trade updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trade"
+        "404":
+          description: Trade not found
+
+  /account:
+    get:
+      tags: [Account]
+      summary: Current trader account
+      security:
+        - bearerAuth: [ADMIN, TRADER]
+      responses:
+        "200":
+          description: Account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+    put:
+      tags: [Account]
+      summary: Update the account balance
+      security:
+        - bearerAuth: [ADMIN, TRADER]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountUpdate"
+      responses:
+        "200":
+          description: Account updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        "400":
+          description: Balance must not be negative
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    Symbol:
+      name: symbol
+      in: path
+      required: true
+      schema:
+        type: string
+        example: EURUSD=X
+    TradeId:
+      name: tradeId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    Role:
+      type: string
+      enum: [ADMIN, TRADER]
+
+    Direction:
+      type: string
+      enum: [BUY, SELL, NEUTRAL]
+
+    AssetCategory:
+      type: string
+      enum: [FOREX, CRYPTO, COMMODITY, INDEX]
+
+    TradeStatus:
+      type: string
+      enum: [PENDING, WON, LOST, DRAW, CANCELLED]
+
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+          format: password
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        role:
+          $ref: "#/components/schemas/Role"
+
+    Asset:
+      type: object
+      properties:
+        symbol:
+          type: string
+          example: EURUSD=X
+        displayName:
+          type: string
+          example: EUR/USD
+        category:
+          $ref: "#/components/schemas/AssetCategory"
+        payout:
+          type: string
+          description: Rendement shown by the platform, "-" when unknown
+          example: "92%"
+        enabled:
+          type: boolean
+
+    AssetInput:
+      type: object
+      required: [symbol, displayName, category]
+      properties:
+        symbol:
+          type: string
+        displayName:
+          type: string
+        category:
+          $ref: "#/components/schemas/AssetCategory"
+        payout:
+          type: string
+        enabled:
+          type: boolean
+
+    Signal:
+      type: object
+      properties:
+        symbol:
+          type: string
+        displayName:
+          type: string
+        currentPrice:
+          type: number
+          format: double
+        openPrice:
+          type: number
+          format: double
+          description: Open price of the current M1 candle
+        ema9:
+          type: number
+          format: double
+        ema21:
+          type: number
+          format: double
+        rsi:
+          type: number
+          format: double
+        trend:
+          $ref: "#/components/schemas/Direction"
+        momentum:
+          type: integer
+          description: RSI contribution to the score (0, 20 or 40)
+        zonePrice:
+          type: number
+          format: double
+          description: Entry zone (support for BUY, resistance for SELL)
+        zoneTouches:
+          type: integer
+          description: How many M1 candles already touched the zone
+        zoneStrength:
+          type: integer
+          description: Zone contribution to the score (0..20, 5 per touch capped at 4)
+        score:
+          type: integer
+          minimum: 0
+          maximum: 100
+        direction:
+          $ref: "#/components/schemas/Direction"
+        tradable:
+          type: boolean
+          description: True only when direction is BUY/SELL and score >= 75
+        distance:
+          type: number
+          format: double
+          description: Signed distance from the current price to the entry zone
+        payout:
+          type: string
+        otcClosed:
+          type: boolean
+          description: True outside the real-market window (OTC weekend filter)
+        evaluatedAt:
+          type: string
+          format: date-time
+
+    Candle:
+      type: object
+      properties:
+        openTime:
+          type: string
+          format: date-time
+        open:
+          type: number
+          format: double
+        high:
+          type: number
+          format: double
+        low:
+          type: number
+          format: double
+        close:
+          type: number
+          format: double
+        volume:
+          type: number
+          format: double
+
+    Trade:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        symbol:
+          type: string
+        displayName:
+          type: string
+        direction:
+          $ref: "#/components/schemas/Direction"
+        zonePrice:
+          type: number
+          format: double
+        entryScore:
+          type: integer
+        payout:
+          type: string
+        status:
+          $ref: "#/components/schemas/TradeStatus"
+        result:
+          type: string
+          nullable: true
+        openedAt:
+          type: string
+          format: date-time
+        closedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    TradeInput:
+      type: object
+      required: [symbol, direction, zonePrice]
+      properties:
+        symbol:
+          type: string
+          example: EURUSD=X
+        direction:
+          $ref: "#/components/schemas/Direction"
+        zonePrice:
+          type: number
+          format: double
+
+    TradeUpdate:
+      type: object
+      required: [status]
+      properties:
+        status:
+          $ref: "#/components/schemas/TradeStatus"
+        result:
+          type: string
+
+    Account:
+      type: object
+      properties:
+        username:
+          type: string
+        balance:
+          type: number
+          format: double
+        currency:
+          type: string
+          example: USD
+        updatedAt:
+          type: string
+          format: date-time
+
+    AccountUpdate:
+      type: object
+      required: [balance]
+      properties:
+        balance:
+          type: number
+          format: double
+
+security:
+  - bearerAuth: []
