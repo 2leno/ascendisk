@@ -1,0 +1,22 @@
+aws:
+  region: eu-west-3
+  s3:
+    bucket: ascendisk-bucket
+    endpoint: ""
+  sqs:
+    endpoint: ""
+    queue:
+      url: ""
+  eventBridge:
+    bus: default
+    endpoint: ""
+
+app:
+  security:
+    jwt:
+      secret: "ascendisk-secret-ascendisk-secret-ascendisk-secret"
+      expiration-minutes: 60
+  market:
+    yahoo:
+      base-url: "https://query1.finance.yahoo.com"
+      candle-limit: 120
