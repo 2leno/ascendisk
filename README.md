@@ -138,21 +138,6 @@ in [`demo/demo-requests.md`](demo/demo-requests.md).
 | GET    | `/account`                | authenticated |
 | PUT    | `/account`                | authenticated |
 
-## Demo accounts
-
-| Role   | Username | Password   |
-| ------ | -------- | ---------- |
-| ADMIN  | `admin`  | `admin123` |
-| TRADER | `trader` | `trader123`|
-
-## Deployment
-
-Preprod is deployed by POJA (see `console.poja.io`):
-
-```
-https://nmrclahvsdiy25powd7xc62gv40vdsfk.lambda-url.eu-west-3.on.aws/
-```
-
 ## Speculations / next steps
 
 - **Push updates** over WebSocket / SSE instead of the current 5s polling on `/signals`.
