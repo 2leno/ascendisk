@@ -11,7 +11,16 @@ import api.poja.app.endpoint.rest.model.response.SignalResponse;
 import api.poja.app.market.MarketDataClient;
 import api.poja.app.model.Candle;
 import api.poja.app.model.Direction;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -91,6 +100,42 @@ class SignalsIT extends ApiIT {
     var response = get("/signals/NOPE=X", token("TRADER"), String.class);
 
     assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+  }
+
+  @Test
+  void stream_pushesSignalEvents() throws Exception {
+    when(clock.instant()).thenReturn(OPEN_MARKET);
+    when(marketDataClient.minuteCandles(anyString(), anyInt())).thenReturn(risingCandles());
+    var client = HttpClient.newHttpClient();
+    var request =
+        HttpRequest.newBuilder(URI.create(restTemplate.getRootUri() + "/signals/stream"))
+            .header("Authorization", "Bearer " + token("TRADER"))
+            .header("Accept", "text/event-stream")
+            .timeout(Duration.ofSeconds(15))
+            .GET()
+            .build();
+
+    var response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
+
+    assertEquals(HttpStatus.OK.value(), response.statusCode());
+    try (var reader =
+        new BufferedReader(new InputStreamReader(response.body(), StandardCharsets.UTF_8))) {
+      var payload = firstEventData(reader);
+      assertTrue(payload.contains("EURUSD=X"));
+      assertTrue(payload.contains("trend"));
+    }
+  }
+
+  private String firstEventData(BufferedReader reader) throws IOException {
+    var data = new StringBuilder();
+    String line;
+    while ((line = reader.readLine()) != null) {
+      if (line.startsWith("data:")) {
+        data.append(line.substring("data:".length()).trim());
+        break;
+      }
+    }
+    return data.toString();
   }
 
   private List<Candle> risingCandles() {

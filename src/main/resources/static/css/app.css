@@ -396,3 +396,17 @@ table.assets button.loss {
   background: var(--surface-2);
   color: var(--muted);
 }
+
+/* sound toggle */
+.topbar .sound {
+  margin-left: auto;
+  font-size: 0.8rem;
+}
+
+.topbar .sound.off {
+  color: var(--muted);
+}
+
+.topbar .logout {
+  margin-left: 0.5rem;
+}

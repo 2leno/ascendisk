@@ -16,6 +16,32 @@ function formatDate(value) {
   return value ? new Date(value).toLocaleString() : "-";
 }
 
+let audioContext = null;
+
+function unlockAudio() {
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  if (!Ctx) return;
+  if (!audioContext) audioContext = new Ctx();
+  if (audioContext.state === "suspended") audioContext.resume();
+}
+
+function playAlert() {
+  if (!audioContext) return;
+  const now = audioContext.currentTime;
+  const oscillator = audioContext.createOscillator();
+  const gain = audioContext.createGain();
+  oscillator.type = "sine";
+  oscillator.frequency.setValueAtTime(880, now);
+  oscillator.frequency.setValueAtTime(1320, now + 0.15);
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(0.2, now + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.32);
+  oscillator.connect(gain);
+  gain.connect(audioContext.destination);
+  oscillator.start(now);
+  oscillator.stop(now + 0.34);
+}
+
 function Login({ onLogin }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -24,6 +50,7 @@ function Login({ onLogin }) {
 
   function submit(event) {
     event.preventDefault();
+    unlockAudio();
     setBusy(true);
     setError(null);
     api
@@ -110,34 +137,11 @@ function SignalCard({ signal, onPick }) {
   );
 }
 
-function SignalsTab({ onTracked }) {
-  const [signals, setSignals] = useState([]);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    let active = true;
-    function load() {
-      api
-        .get("/signals")
-        .then(function (data) {
-          if (active) {
-            setSignals(data);
-            setError(null);
-          }
-        })
-        .catch(function (e) {
-          if (active) setError(e.message);
-        });
-    }
-    load();
-    const id = setInterval(load, 5000);
-    return () => {
-      active = false;
-      clearInterval(id);
-    };
-  }, []);
+function SignalsTab({ signals, error, onTracked }) {
+  const [pickError, setPickError] = useState(null);
 
   function pick(signal) {
+    setPickError(null);
     api
       .post("/trades", {
         symbol: signal.symbol,
@@ -148,7 +152,7 @@ function SignalsTab({ onTracked }) {
         if (onTracked) onTracked();
       })
       .catch(function (e) {
-        setError(e.message);
+        setPickError(e.message);
       });
   }
 
@@ -159,6 +163,7 @@ function SignalsTab({ onTracked }) {
         Triés par proximité de la zone d'entrée. Un signal n'apparaît qu'à partir de 75%.
       </p>
       {error && <p className="error">{error}</p>}
+      {pickError && <p className="error">{pickError}</p>}
       <div className="cards">
         {signals.map((signal) => (
           <SignalCard key={signal.symbol} signal={signal} onPick={pick} />
@@ -517,6 +522,15 @@ function App() {
   const [token, setToken] = useState(api.getToken());
   const [role, setRole] = useState(api.getRole());
   const [tab, setTab] = useState(hashTab());
+  const [signals, setSignals] = useState([]);
+  const [signalsError, setSignalsError] = useState(null);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const tradableRef = useRef(new Set());
+  const soundRef = useRef(true);
+
+  useEffect(() => {
+    soundRef.current = soundEnabled;
+  }, [soundEnabled]);
 
   useEffect(() => {
     function onUnauthorized() {
@@ -534,6 +548,92 @@ function App() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!token) {
+      setSignals([]);
+      return undefined;
+    }
+    let active = true;
+    let stopStream = null;
+    let pollId = null;
+    let watchdog = null;
+    let received = false;
+
+    function apply(next) {
+      if (!active) return;
+      received = true;
+      if (watchdog) {
+        clearTimeout(watchdog);
+        watchdog = null;
+      }
+      setSignals(next);
+      setSignalsError(null);
+    }
+
+    function startPolling() {
+      if (pollId || !active) return;
+      function load() {
+        api
+          .get("/signals")
+          .then(apply)
+          .catch(function (e) {
+            if (active) setSignalsError(e.message);
+          });
+      }
+      load();
+      pollId = setInterval(load, 5000);
+    }
+
+    function stopPolling() {
+      if (pollId) {
+        clearInterval(pollId);
+        pollId = null;
+      }
+    }
+
+    stopStream = api.stream("/signals/stream", {
+      onEvent: apply,
+      onError: function () {
+        stopStream = null;
+        startPolling();
+      },
+      onClose: function () {
+        stopStream = null;
+        startPolling();
+      },
+    });
+
+    watchdog = setTimeout(function () {
+      if (active && !received) {
+        if (stopStream) {
+          stopStream();
+          stopStream = null;
+        }
+        startPolling();
+      }
+    }, 8000);
+
+    return function () {
+      active = false;
+      if (watchdog) clearTimeout(watchdog);
+      if (stopStream) stopStream();
+      stopPolling();
+    };
+  }, [token]);
+
+  useEffect(() => {
+    const current = new Set(
+      signals.filter((signal) => signal.tradable).map((signal) => signal.symbol)
+    );
+    const previous = tradableRef.current;
+    let appeared = false;
+    current.forEach(function (symbol) {
+      if (!previous.has(symbol)) appeared = true;
+    });
+    tradableRef.current = current;
+    if (appeared && soundRef.current) playAlert();
+  }, [signals]);
+
   function go(next) {
     window.location.hash = "#/" + next;
     setTab(next);
@@ -550,6 +650,11 @@ function App() {
     api.clearSession();
     setToken(null);
     setRole(null);
+  }
+
+  function toggleSound() {
+    unlockAudio();
+    setSoundEnabled((value) => !value);
   }
 
   if (!token) {
@@ -580,12 +685,21 @@ function App() {
             </button>
           ))}
         </nav>
+        <button
+          className={"sound " + (soundEnabled ? "on" : "off")}
+          onClick={toggleSound}
+          title="Alerte sonore sur nouveau signal"
+        >
+          {soundEnabled ? "Son" : "Muet"}
+        </button>
         <button className="logout" onClick={logout}>
           Déconnexion
         </button>
       </header>
       <main>
-        {tab === "signals" && <SignalsTab onTracked={() => go("tracked")} />}
+        {tab === "signals" && (
+          <SignalsTab signals={signals} error={signalsError} onTracked={() => go("tracked")} />
+        )}
         {tab === "tracked" && <TrackedTab />}
         {tab === "account" && <AccountTab />}
         {tab === "assets" && role === "ADMIN" && <AssetsTab />}
