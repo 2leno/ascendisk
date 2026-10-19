@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 
 class SecurityIT extends ApiIT {
 
@@ -33,6 +34,29 @@ class SecurityIT extends ApiIT {
     var response = get("/ping", null, String.class);
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertEquals("pong", response.getBody());
+  }
+
+  @Test
+  void manifest_isPublic() {
+    var response = get("/manifest.webmanifest", null, String.class);
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertEquals(
+        MediaType.parseMediaType("application/manifest+json"),
+        response.getHeaders().getContentType());
+    assertTrue(response.getBody().contains("\"Ascendisk\""));
+  }
+
+  @Test
+  void serviceWorker_isPublic() {
+    var response = get("/sw.js", null, String.class);
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertTrue(response.getBody().contains("ascendisk-shell"));
+  }
+
+  @Test
+  void icons_arePublic() {
+    assertEquals(HttpStatus.OK, get("/img/icon-192.png", null, byte[].class).getStatusCode());
+    assertEquals(HttpStatus.OK, get("/favicon.ico", null, byte[].class).getStatusCode());
   }
 
   @Test
