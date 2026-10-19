@@ -97,10 +97,13 @@ label select {
   align-items: center;
   justify-content: center;
   min-height: 100vh;
+  min-height: 100dvh;
+  padding: 1rem;
 }
 
 .login-card {
-  width: 340px;
+  width: 100%;
+  max-width: 340px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -132,12 +135,19 @@ label select {
   font-weight: 700;
 }
 
+.login-card .install-hint {
+  margin: 0.9rem 0 0;
+}
+
 /* shell */
 .topbar {
   display: flex;
   align-items: center;
   gap: 1.5rem;
   padding: 0.8rem 1.5rem;
+  padding-top: calc(0.8rem + env(safe-area-inset-top, 0px));
+  padding-left: calc(1.5rem + env(safe-area-inset-left, 0px));
+  padding-right: calc(1.5rem + env(safe-area-inset-right, 0px));
   background: var(--surface);
   border-bottom: 1px solid var(--border);
   position: sticky;
@@ -175,6 +185,7 @@ label select {
 
 main {
   padding: 1.5rem;
+  padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
   max-width: 1200px;
   margin: 0 auto;
 }
@@ -186,7 +197,7 @@ main {
 /* cards */
 .cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
   gap: 1rem;
   margin-top: 1rem;
 }
@@ -384,8 +395,13 @@ main {
   font-weight: 700;
 }
 
+.table-scroll {
+  overflow-x: auto;
+}
+
 table.assets {
   width: 100%;
+  min-width: 560px;
   border-collapse: collapse;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -442,4 +458,61 @@ table.assets button.loss {
 
 .topbar .logout {
   margin-left: 0.5rem;
+}
+
+@media (max-width: 760px) {
+  .topbar {
+    flex-wrap: wrap;
+    gap: 0.5rem 0.75rem;
+    padding: calc(0.65rem + env(safe-area-inset-top, 0px))
+      calc(1rem + env(safe-area-inset-right, 0px)) 0.65rem
+      calc(1rem + env(safe-area-inset-left, 0px));
+  }
+
+  .brand {
+    margin-right: auto;
+    font-size: 0.95rem;
+    letter-spacing: 2px;
+  }
+
+  .brand img {
+    width: 24px;
+    height: 24px;
+  }
+
+  .topbar nav {
+    order: 4;
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 0.15rem;
+  }
+
+  .topbar nav button {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .topbar .install,
+  .topbar .sound,
+  .topbar .logout {
+    margin-left: 0;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.75rem;
+  }
+
+  .topbar .logout {
+    margin-left: 0.25rem;
+  }
+
+  main {
+    padding: 1rem calc(1rem + env(safe-area-inset-right, 0px))
+      calc(1rem + env(safe-area-inset-bottom, 0px))
+      calc(1rem + env(safe-area-inset-left, 0px));
+  }
+}
+
+@media (max-width: 420px) {
+  .brand-name {
+    display: none;
+  }
 }
