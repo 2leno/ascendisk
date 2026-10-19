@@ -1,3 +1,6 @@
+server:
+  port: ${SERVER_PORT:2041}
+
 aws:
   region: eu-west-3
   s3:
@@ -12,6 +15,8 @@ aws:
     endpoint: ""
 
 app:
+  cors:
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:2042,http://127.0.0.1:2042}
   security:
     jwt:
       secret: "ascendisk-secret-ascendisk-secret-ascendisk-secret"
