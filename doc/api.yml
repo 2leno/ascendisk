@@ -6,8 +6,8 @@ info:
     forex candles, computes a convergence score (EMA 9/21 trend + RSI 14 momentum +
     entry-zone strength), exposes BUY/SELL signals only above the 75% precision
     threshold, blocks OTC weekend windows, and lets the trader track manually placed
-    orders. A Thymeleaf interface (signals / tracking / account tabs) is provided for
-    the ADMIN.
+    orders. A single-page React interface (signals / tracking / account / assets tabs)
+    is served by the application itself.
   version: "1.0.0"
 servers:
   - url: /
