@@ -42,11 +42,22 @@ function playAlert() {
   oscillator.stop(now + 0.34);
 }
 
+function showIosInstallHint() {
+  if (window.navigator.standalone) return false;
+  if (window.matchMedia("(display-mode: standalone)").matches) return false;
+  const ua = window.navigator.userAgent;
+  return (
+    /iPad|iPhone|iPod/.test(ua) ||
+    (window.navigator.platform === "MacIntel" && window.navigator.maxTouchPoints > 1)
+  );
+}
+
 function Login({ onLogin }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
+  const iosHint = showIosInstallHint();
 
   function submit(event) {
     event.preventDefault();
@@ -84,6 +95,11 @@ function Login({ onLogin }) {
         <button type="submit" disabled={busy}>
           {busy ? "Signing in..." : "Sign in"}
         </button>
+        {iosHint && (
+          <p className="install-hint muted small">
+            Pour installer : Partager puis « Sur l'écran d'accueil ».
+          </p>
+        )}
       </form>
     </div>
   );
@@ -484,32 +500,34 @@ function AssetsTab() {
         />
         <button type="submit">Ajouter</button>
       </form>
-      <table className="assets">
-        <thead>
-          <tr>
-            <th>Symbole</th>
-            <th>Nom</th>
-            <th>Catégorie</th>
-            <th>Payout</th>
-            <th>Actif</th>
-          </tr>
-        </thead>
-        <tbody>
-          {assets.map((asset) => (
-            <tr key={asset.symbol}>
-              <td>{asset.symbol}</td>
-              <td>{asset.displayName}</td>
-              <td>{asset.category}</td>
-              <td>{asset.payout || "-"}</td>
-              <td>
-                <button className={asset.enabled ? "win" : "loss"} onClick={() => toggle(asset)}>
-                  {asset.enabled ? "Activé" : "Désactivé"}
-                </button>
-              </td>
+      <div className="table-scroll">
+        <table className="assets">
+          <thead>
+            <tr>
+              <th>Symbole</th>
+              <th>Nom</th>
+              <th>Catégorie</th>
+              <th>Payout</th>
+              <th>Actif</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {assets.map((asset) => (
+              <tr key={asset.symbol}>
+                <td>{asset.symbol}</td>
+                <td>{asset.displayName}</td>
+                <td>{asset.category}</td>
+                <td>{asset.payout || "-"}</td>
+                <td>
+                  <button className={asset.enabled ? "win" : "loss"} onClick={() => toggle(asset)}>
+                    {asset.enabled ? "Activé" : "Désactivé"}
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </section>
   );
 }
@@ -701,7 +719,7 @@ function App() {
       <header className="topbar">
         <span className="brand">
           <img src="/img/logo.png" alt="Ascendisk" />
-          ASCENDISK
+          <span className="brand-name">ASCENDISK</span>
         </span>
         <nav>
           {tabs.map((item) => (
