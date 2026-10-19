@@ -22,8 +22,10 @@ public class SignalScoringService {
   private static final int ZONE_PER_TOUCH = 5;
   private static final int ZONE_MAX = 20;
   private static final int TRADE_THRESHOLD = 75;
-  private static final double RSI_BULLISH = 55.0;
-  private static final double RSI_BEARISH = 45.0;
+  private static final double RSI_OVERSOLD = 45.0;
+  private static final double RSI_OVERBOUGHT = 55.0;
+  private static final double RSI_BULLISH_CAP = 60.0;
+  private static final double RSI_BEARISH_FLOOR = 40.0;
 
   private final IndicatorCalculator indicatorCalculator;
   private final EntryZoneDetector entryZoneDetector;
@@ -87,10 +89,12 @@ public class SignalScoringService {
 
   private int momentum(Direction trend, double rsi) {
     if (trend == Direction.BUY) {
-      return rsi >= RSI_BULLISH ? MOMENTUM_STRONG : rsi > RSI_BEARISH ? MOMENTUM_NEUTRAL : 0;
+      return rsi < RSI_OVERSOLD ? MOMENTUM_STRONG : rsi < RSI_BULLISH_CAP ? MOMENTUM_NEUTRAL : 0;
     }
     if (trend == Direction.SELL) {
-      return rsi <= RSI_BEARISH ? MOMENTUM_STRONG : rsi < RSI_BULLISH ? MOMENTUM_NEUTRAL : 0;
+      return rsi > RSI_OVERBOUGHT
+          ? MOMENTUM_STRONG
+          : rsi > RSI_BEARISH_FLOOR ? MOMENTUM_NEUTRAL : 0;
     }
     return 0;
   }
