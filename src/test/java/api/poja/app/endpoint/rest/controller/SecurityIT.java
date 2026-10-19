@@ -2,12 +2,14 @@ package api.poja.app.endpoint.rest.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 
 class SecurityIT extends ApiIT {
 
@@ -37,33 +39,18 @@ class SecurityIT extends ApiIT {
   }
 
   @Test
-  void manifest_isPublic() {
-    var response = get("/manifest.webmanifest", null, String.class);
-    assertEquals(HttpStatus.OK, response.getStatusCode());
-    assertEquals(
-        MediaType.parseMediaType("application/manifest+json"),
-        response.getHeaders().getContentType());
-    assertTrue(response.getBody().contains("\"Ascendisk\""));
-  }
+  void corsPreflight_allowsFrontendOrigin() {
+    var headers = new HttpHeaders();
+    headers.setOrigin("http://localhost:5173");
+    headers.setAccessControlRequestMethod(HttpMethod.GET);
+    headers.setAccessControlRequestHeaders(List.of("authorization"));
 
-  @Test
-  void serviceWorker_isPublic() {
-    var response = get("/sw.js", null, String.class);
-    assertEquals(HttpStatus.OK, response.getStatusCode());
-    assertTrue(response.getBody().contains("ascendisk-shell"));
-  }
+    var response =
+        restTemplate.exchange(
+            "/signals", HttpMethod.OPTIONS, new HttpEntity<>(headers), String.class);
 
-  @Test
-  void icons_arePublic() {
-    assertEquals(HttpStatus.OK, get("/img/icon-192.png", null, byte[].class).getStatusCode());
-    assertEquals(HttpStatus.OK, get("/favicon.ico", null, byte[].class).getStatusCode());
-  }
-
-  @Test
-  void index_isPublic() {
-    var response = get("/index.html", null, String.class);
     assertEquals(HttpStatus.OK, response.getStatusCode());
-    assertTrue(response.getBody().contains("Ascendisk"));
+    assertEquals("http://localhost:5173", response.getHeaders().getAccessControlAllowOrigin());
   }
 
   @Test

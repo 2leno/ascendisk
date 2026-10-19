@@ -12,6 +12,8 @@ aws:
     endpoint: ""
 
 app:
+  cors:
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000}
   security:
     jwt:
       secret: "ascendisk-secret-ascendisk-secret-ascendisk-secret"

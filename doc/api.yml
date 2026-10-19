@@ -6,8 +6,7 @@ info:
     forex candles, computes a convergence score (EMA 9/21 trend + RSI 14 momentum +
     entry-zone strength), exposes BUY/SELL signals only above the 75% precision
     threshold, blocks OTC weekend windows, and lets the trader track manually placed
-    orders. A single-page React interface (signals / tracking / account / assets tabs)
-    is served by the application itself.
+    orders. The React interface is served by a separate frontend application.
   version: "1.0.0"
 servers:
   - url: /
