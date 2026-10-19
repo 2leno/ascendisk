@@ -1,11 +1,11 @@
-const CACHE = "ascendisk-shell-v1";
+const CACHE = "ascendisk-shell-v2";
 
 const SHELL = [
   "/",
   "/index.html",
   "/css/app.css",
   "/js/api.js",
-  "/js/app.jsx",
+  "/js/app.js",
   "/js/pwa.js",
   "/img/logo.png",
   "/img/icon-192.png",
