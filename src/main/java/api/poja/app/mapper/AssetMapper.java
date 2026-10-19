@@ -30,6 +30,25 @@ public class AssetMapper {
         .build();
   }
 
+  public JAsset toEntity(AssetInput input) {
+    return JAsset.builder()
+        .symbol(input.symbol())
+        .displayName(input.displayName())
+        .category(input.category())
+        .payout(input.payout())
+        .enabled(input.enabled() == null || input.enabled())
+        .build();
+  }
+
+  public void update(JAsset entity, AssetInput input) {
+    entity.setDisplayName(input.displayName());
+    entity.setCategory(input.category());
+    entity.setPayout(input.payout());
+    if (input.enabled() != null) {
+      entity.setEnabled(input.enabled());
+    }
+  }
+
   public AssetResponse toResponse(Asset asset) {
     return AssetResponse.builder()
         .symbol(asset.symbol())

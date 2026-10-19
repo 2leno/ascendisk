@@ -46,7 +46,9 @@ public class SignalScoringService {
     var trendScore = trend == Direction.NEUTRAL ? 0 : TREND_SCORE;
     var score = Math.min(100, trendScore + momentum + zoneStrength);
     var direction =
-        score >= TRADE_THRESHOLD && trend != Direction.NEUTRAL ? trend : Direction.NEUTRAL;
+        !otcClosed && score >= TRADE_THRESHOLD && trend != Direction.NEUTRAL
+            ? trend
+            : Direction.NEUTRAL;
 
     return SignalAssessment.builder()
         .symbol(asset.symbol())
