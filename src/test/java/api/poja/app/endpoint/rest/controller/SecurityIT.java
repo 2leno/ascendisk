@@ -39,7 +39,7 @@ class SecurityIT extends ApiIT {
   void index_isPublic() {
     var response = get("/index.html", null, String.class);
     assertEquals(HttpStatus.OK, response.getStatusCode());
-    assertTrue(response.getBody().contains("ASCENDISK"));
+    assertTrue(response.getBody().contains("Ascendisk"));
   }
 
   @Test
