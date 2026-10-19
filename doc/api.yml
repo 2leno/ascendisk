@@ -18,6 +18,8 @@ tags:
     description: Tradable instruments and their payout
   - name: Signals
     description: Real-time directional signals
+  - name: Health
+    description: Liveness probe
   - name: Candles
     description: M1 candle stream for the tracking charts
   - name: Trades
@@ -132,6 +134,28 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Signal"
+
+  /signals/stream:
+    get:
+      tags: [Signals]
+      summary: Push the current signals as server-sent events
+      description: >
+        Emits the full signal list under the event name `signals`. Best effort: when
+        the response is buffered or unavailable (for example behind a Lambda URL) the
+        interface falls back to polling GET /signals.
+      security:
+        - bearerAuth: [ADMIN, TRADER]
+      responses:
+        "200":
+          description: Event stream of signal lists
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: SSE frame `event:signals` whose data is a JSON array of Signal
+              example: |
+                event:signals
+                data:[{"symbol":"EURUSD=X","score":80,"direction":"SELL","tradable":true}]
 
   /signals/{symbol}:
     get:
@@ -262,6 +286,20 @@ paths:
                 $ref: "#/components/schemas/Trade"
         "404":
           description: Trade not found
+
+  /ping:
+    get:
+      tags: [Health]
+      summary: Liveness probe
+      security: []
+      responses:
+        "200":
+          description: Service is up
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: pong
 
   /account:
     get:
