@@ -69,6 +69,7 @@ function Login({ onLogin }) {
   return (
     <div className="login">
       <form className="login-card" onSubmit={submit}>
+        <img className="logo" src="/img/logo.png" alt="Ascendisk" />
         <h1>ASCENDISK</h1>
         <p className="muted">Binary options signal indicator</p>
         <label>
@@ -525,12 +526,29 @@ function App() {
   const [signals, setSignals] = useState([]);
   const [signalsError, setSignalsError] = useState(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [installPrompt, setInstallPrompt] = useState(null);
   const tradableRef = useRef(new Set());
   const soundRef = useRef(true);
 
   useEffect(() => {
     soundRef.current = soundEnabled;
   }, [soundEnabled]);
+
+  useEffect(() => {
+    function onPrompt(event) {
+      event.preventDefault();
+      setInstallPrompt(event);
+    }
+    function onInstalled() {
+      setInstallPrompt(null);
+    }
+    window.addEventListener("beforeinstallprompt", onPrompt);
+    window.addEventListener("appinstalled", onInstalled);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", onPrompt);
+      window.removeEventListener("appinstalled", onInstalled);
+    };
+  }, []);
 
   useEffect(() => {
     function onUnauthorized() {
@@ -657,6 +675,14 @@ function App() {
     setSoundEnabled((value) => !value);
   }
 
+  function install() {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    installPrompt.userChoice.then(function () {
+      setInstallPrompt(null);
+    });
+  }
+
   if (!token) {
     return <Login onLogin={onLogin} />;
   }
@@ -673,7 +699,10 @@ function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <span className="brand">ASCENDISK</span>
+        <span className="brand">
+          <img src="/img/logo.png" alt="Ascendisk" />
+          ASCENDISK
+        </span>
         <nav>
           {tabs.map((item) => (
             <button
@@ -685,6 +714,11 @@ function App() {
             </button>
           ))}
         </nav>
+        {installPrompt && (
+          <button className="install" onClick={install} title="Installer l'application">
+            Installer
+          </button>
+        )}
         <button
           className={"sound " + (soundEnabled ? "on" : "off")}
           onClick={toggleSound}

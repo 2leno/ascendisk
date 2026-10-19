@@ -105,10 +105,23 @@ label select {
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 2rem;
+  text-align: center;
+}
+
+.login-card .logo {
+  display: block;
+  width: 104px;
+  height: 104px;
+  margin: 0 auto 0.75rem;
+  object-fit: contain;
 }
 
 .login-card h1 {
   letter-spacing: 4px;
+}
+
+.login-card label {
+  text-align: left;
 }
 
 .login-card button {
@@ -133,8 +146,17 @@ label select {
 }
 
 .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
   font-weight: 800;
   letter-spacing: 3px;
+}
+
+.brand img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
 }
 
 .topbar nav {
@@ -405,6 +427,17 @@ table.assets button.loss {
 
 .topbar .sound.off {
   color: var(--muted);
+}
+
+.topbar .install {
+  margin-left: auto;
+  font-size: 0.8rem;
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.topbar .install + .sound {
+  margin-left: 0.5rem;
 }
 
 .topbar .logout {

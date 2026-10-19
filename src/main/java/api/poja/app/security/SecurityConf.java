@@ -57,6 +57,8 @@ public class SecurityConf {
                         "/css/**",
                         "/img/**",
                         "/favicon.ico",
+                        "/manifest.webmanifest",
+                        "/sw.js",
                         "/ping",
                         "/health/**",
                         "/swagger-ui/**",
