@@ -33,6 +33,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConf {
 
   private final JwtAuthFilter jwtAuthFilter;
+  private final FirebaseAuthFilter firebaseAuthFilter;
   private final ObjectMapper objectMapper;
 
   @Bean
@@ -85,12 +86,10 @@ public class SecurityConf {
                         "/swagger-ui.html",
                         "/v3/api-docs/**")
                     .permitAll()
-                    .requestMatchers(HttpMethod.POST, "/auth/login")
-                    .permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/signals")
                     .permitAll()
-                    .requestMatchers(HttpMethod.POST, "/api/licenses/activate")
-                    .permitAll()
+                    .requestMatchers("/api/admin/**")
+                    .hasRole("ADMIN")
                     .requestMatchers(HttpMethod.POST, "/assets", "/assets/**")
                     .hasRole("ADMIN")
                     .requestMatchers(HttpMethod.PUT, "/assets/**")
@@ -98,6 +97,7 @@ public class SecurityConf {
                     .anyRequest()
                     .authenticated())
         .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+        .addFilterBefore(firebaseAuthFilter, JwtAuthFilter.class)
         .build();
   }
 

@@ -1,3 +1,5 @@
 package api.poja.app.endpoint.rest.model.response;
 
-public record LicenseActivationResponse(boolean success, String message) {}
+import java.time.Instant;
+
+public record LicenseActivationResponse(boolean success, String message, Instant expiresAt) {}

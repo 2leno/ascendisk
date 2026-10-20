@@ -1,10 +1,15 @@
 package api.poja.app.endpoint.rest.controller;
 
+import static org.mockito.Mockito.when;
+
 import api.poja.app.conf.FacadeIT;
+import api.poja.app.security.FirebaseTokenVerifier;
+import api.poja.app.security.FirebaseUser;
 import api.poja.app.security.JwtTokenProvider;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -18,6 +23,19 @@ public abstract class ApiIT extends FacadeIT {
   @Autowired protected TestRestTemplate restTemplate;
 
   @Autowired protected JwtTokenProvider jwtTokenProvider;
+
+  @MockBean protected FirebaseTokenVerifier firebaseTokenVerifier;
+
+  protected String firebaseToken(String email) {
+    var token = "firebase-" + email;
+    var user = new FirebaseUser("uid-" + email, email, "Test " + email, null, true);
+    when(firebaseTokenVerifier.verify(token)).thenReturn(user);
+    return token;
+  }
+
+  protected String adminFirebaseToken() {
+    return firebaseToken("hei.lucas.13@gmail.com");
+  }
 
   @BeforeEach
   void disableStreaming() {

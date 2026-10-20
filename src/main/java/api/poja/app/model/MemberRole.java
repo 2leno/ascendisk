@@ -1,6 +1,6 @@
 package api.poja.app.model;
 
-public enum Role {
+public enum MemberRole {
   ADMIN,
-  TRADER
+  USER
 }

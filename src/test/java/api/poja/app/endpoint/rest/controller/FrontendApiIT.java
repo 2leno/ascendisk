@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
@@ -29,12 +30,17 @@ class FrontendApiIT extends ApiIT {
 
   @MockBean Clock clock;
 
+  @BeforeEach
+  void fixedClock() {
+    when(clock.instant()).thenReturn(OPEN_MARKET);
+  }
+
   @Test
   void signals_arePublicAndFollowFrontendContract() {
     when(clock.instant()).thenReturn(OPEN_MARKET);
     when(marketDataClient.minuteCandles(anyString(), anyInt())).thenReturn(risingCandles());
 
-    var response = get("/api/signals", null, FrontendSignalResponse[].class);
+    var response = get("/api/signals", adminFirebaseToken(), FrontendSignalResponse[].class);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     var eurusd =
@@ -51,11 +57,22 @@ class FrontendApiIT extends ApiIT {
   }
 
   @Test
-  void signals_withoutMarketData_areLocked() {
+  void signals_withoutMarketData_returnNoTradableSignalsForFreeUsers() {
     when(clock.instant()).thenReturn(OPEN_MARKET);
     when(marketDataClient.minuteCandles(anyString(), anyInt())).thenReturn(List.of());
 
     var response = get("/api/signals", null, FrontendSignalResponse[].class);
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertEquals(0, response.getBody().length);
+  }
+
+  @Test
+  void signals_withoutMarketData_areVisibleToAdmins() {
+    when(clock.instant()).thenReturn(OPEN_MARKET);
+    when(marketDataClient.minuteCandles(anyString(), anyInt())).thenReturn(List.of());
+
+    var response = get("/api/signals", adminFirebaseToken(), FrontendSignalResponse[].class);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertTrue(Arrays.stream(response.getBody()).allMatch(FrontendSignalResponse::locked));
@@ -65,8 +82,25 @@ class FrontendApiIT extends ApiIT {
   }
 
   @Test
+  void activate_withoutToken_returnsUnauthorized() {
+    var response =
+        post(
+            "/api/licenses/activate",
+            null,
+            Map.of("key", "OBK-UNKNOWN"),
+            LicenseActivationResponse.class);
+
+    assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+  }
+
+  @Test
   void activate_withoutBody_returnsFailure() {
-    var response = post("/api/licenses/activate", null, null, LicenseActivationResponse.class);
+    var response =
+        post(
+            "/api/licenses/activate",
+            firebaseToken("buyer@test.local"),
+            null,
+            LicenseActivationResponse.class);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertFalse(response.getBody().success());
@@ -75,7 +109,12 @@ class FrontendApiIT extends ApiIT {
 
   @Test
   void activate_withoutKey_returnsFailure() {
-    var response = post("/api/licenses/activate", null, Map.of(), LicenseActivationResponse.class);
+    var response =
+        post(
+            "/api/licenses/activate",
+            firebaseToken("buyer@test.local"),
+            Map.of(),
+            LicenseActivationResponse.class);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertFalse(response.getBody().success());
@@ -87,7 +126,7 @@ class FrontendApiIT extends ApiIT {
     var response =
         post(
             "/api/licenses/activate",
-            null,
+            firebaseToken("buyer@test.local"),
             Map.of("key", "OBK-UNKNOWN"),
             LicenseActivationResponse.class);
 

@@ -14,4 +14,6 @@ public interface JAssetRepository extends JpaRepository<JAsset, UUID> {
   boolean existsBySymbol(String symbol);
 
   List<JAsset> findAllByEnabledTrue();
+
+  long countByEnabledTrue();
 }

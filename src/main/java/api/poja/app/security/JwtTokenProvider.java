@@ -4,13 +4,16 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import javax.crypto.SecretKey;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 public class JwtTokenProvider {
 
@@ -20,8 +23,18 @@ public class JwtTokenProvider {
   public JwtTokenProvider(
       @Value("${app.security.jwt.secret:}") String secret,
       @Value("${app.security.jwt.expiration-minutes:60}") long expirationMinutes) {
-    this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+    this.key = Keys.hmacShaKeyFor(secretBytes(secret));
     this.expirationMinutes = expirationMinutes;
+  }
+
+  private byte[] secretBytes(String secret) {
+    if (secret != null && !secret.isBlank()) {
+      return secret.getBytes(StandardCharsets.UTF_8);
+    }
+    log.warn("APP_SECURITY_JWT_SECRET is not configured: using an ephemeral JWT secret");
+    var bytes = new byte[32];
+    new SecureRandom().nextBytes(bytes);
+    return bytes;
   }
 
   public String generateToken(String username, List<String> roles) {
