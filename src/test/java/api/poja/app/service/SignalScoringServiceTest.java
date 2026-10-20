@@ -132,7 +132,7 @@ class SignalScoringServiceTest {
     var result = service.assess(ASSET, candles(), false, NOW);
 
     assertEquals(20, result.zoneStrength());
-    assertEquals(100, result.score());
+    assertEquals(99, result.score());
   }
 
   @Test

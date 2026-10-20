@@ -16,6 +16,7 @@ public class SignalScoringService {
   private static final int EMA_FAST = 9;
   private static final int EMA_SLOW = 21;
   private static final int RSI_PERIOD = 14;
+  private static final int MAX_SCORE = 99;
   private static final int TREND_SCORE = 40;
   private static final int MOMENTUM_STRONG = 40;
   private static final int MOMENTUM_NEUTRAL = 20;
@@ -50,7 +51,7 @@ public class SignalScoringService {
     var zone = entryZoneDetector.detect(candles, current.close(), trend);
     var zoneStrength = Math.min(ZONE_MAX, zone.touches() * ZONE_PER_TOUCH);
     var trendScore = trend == Direction.NEUTRAL ? 0 : TREND_SCORE;
-    var score = Math.min(100, trendScore + momentum + zoneStrength);
+    var score = Math.min(MAX_SCORE, trendScore + momentum + zoneStrength);
     var direction =
         !otcClosed && score >= TRADE_THRESHOLD && trend != Direction.NEUTRAL
             ? trend
