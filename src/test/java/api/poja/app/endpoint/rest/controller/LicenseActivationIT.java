@@ -7,8 +7,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import api.poja.app.endpoint.rest.model.request.CreateLicenseKeyRequest;
 import api.poja.app.endpoint.rest.model.response.GeneratedLicenseResponse;
 import api.poja.app.endpoint.rest.model.response.LicenseActivationResponse;
+import api.poja.app.repository.JLicenseKeyRepository;
 import api.poja.app.repository.JMemberRepository;
 import api.poja.app.service.LicenseService;
+import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -21,6 +23,8 @@ class LicenseActivationIT extends ApiIT {
   @Autowired LicenseService licenseService;
 
   @Autowired JMemberRepository memberRepository;
+
+  @Autowired JLicenseKeyRepository licenseKeyRepository;
 
   @Test
   void activate_withGeneratedKey_succeeds() {
@@ -40,7 +44,7 @@ class LicenseActivationIT extends ApiIT {
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertFalse(response.getBody().success());
-    assertEquals("Clé invalide ou champ vide.", response.getBody().message());
+    assertEquals("Clé invalide.", response.getBody().message());
   }
 
   @Test
@@ -65,6 +69,19 @@ class LicenseActivationIT extends ApiIT {
 
     assertFalse(response.getBody().success());
     assertTrue(response.getBody().message().contains("limite"));
+  }
+
+  @Test
+  void activate_expiredKey_fails() {
+    var generated = generateKey(1);
+    var key = licenseKeyRepository.findById(generated.key().id()).orElseThrow();
+    key.setExpiresAt(Instant.now().minusSeconds(60));
+    licenseKeyRepository.save(key);
+
+    var response = activate(uniqueEmail(), generated.code());
+
+    assertFalse(response.getBody().success());
+    assertEquals("Clé expirée.", response.getBody().message());
   }
 
   @Test

@@ -42,11 +42,11 @@ public class LicenseService {
   @Transactional
   public LicenseActivationResponse activate(JMember member, String rawKey) {
     if (rawKey == null || rawKey.isBlank()) {
-      return new LicenseActivationResponse(false, "Clé invalide ou champ vide.", null);
+      return new LicenseActivationResponse(false, "Veuillez renseigner ce champ.", null);
     }
     var key = keyRepository.findByCodeHash(hash(rawKey)).orElse(null);
     if (key == null) {
-      return new LicenseActivationResponse(false, "Clé invalide ou champ vide.", null);
+      return new LicenseActivationResponse(false, "Clé invalide.", null);
     }
     if (!key.isActive()) {
       return new LicenseActivationResponse(false, "Clé désactivée.", null);
