@@ -14,6 +14,7 @@ import com.nimbusds.jwt.SignedJWT;
 import java.net.URI;
 import java.time.Clock;
 import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -28,6 +29,7 @@ public class FirebaseTokenVerifier {
   private final JWKSource<SecurityContext> jwkSource;
   private final Clock clock;
 
+  @Autowired
   public FirebaseTokenVerifier(
       @Value("${app.firebase.project-id:ascendisk}") String projectId, Clock clock) {
     this(projectId, remoteJwkSource(), clock);
