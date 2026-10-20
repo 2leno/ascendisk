@@ -42,9 +42,7 @@ public class FrontendController {
     var premium = hasPremiumAccess(authentication);
     return IntStream.range(0, signals.size())
         .filter(index -> signalAccessPolicy.visible(signals.get(index), premium))
-        .mapToObj(
-            index ->
-                frontendSignalMapper.toResponse(signals.get(index), index + 1L, premium))
+        .mapToObj(index -> frontendSignalMapper.toResponse(signals.get(index), index + 1L, premium))
         .toList();
   }
 

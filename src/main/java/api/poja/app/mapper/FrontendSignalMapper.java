@@ -18,8 +18,7 @@ public class FrontendSignalMapper {
     return toResponse(signal, id, true);
   }
 
-  public FrontendSignalResponse toResponse(
-      SignalAssessment signal, long id, boolean premium) {
+  public FrontendSignalResponse toResponse(SignalAssessment signal, long id, boolean premium) {
     var locked = accessPolicy.locked(signal, premium);
     return FrontendSignalResponse.builder()
         .id(id)
