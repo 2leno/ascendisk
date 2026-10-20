@@ -43,7 +43,7 @@ class LicenseServiceTest {
     var response = service.activate(null, null);
 
     assertFalse(response.success());
-    assertEquals("Entre ta clé d'activation.", response.message());
+    assertEquals("Clé invalide ou champ vide.", response.message());
   }
 
   @Test
@@ -51,7 +51,7 @@ class LicenseServiceTest {
     var response = service.activate(null, "  ");
 
     assertFalse(response.success());
-    assertEquals("Entre ta clé d'activation.", response.message());
+    assertEquals("Clé invalide ou champ vide.", response.message());
   }
 
   @Test
@@ -61,7 +61,7 @@ class LicenseServiceTest {
     var response = service.activate(null, "OBK-WRONG");
 
     assertFalse(response.success());
-    assertEquals("Clé invalide.", response.message());
+    assertEquals("Clé invalide ou champ vide.", response.message());
   }
 
   @Test

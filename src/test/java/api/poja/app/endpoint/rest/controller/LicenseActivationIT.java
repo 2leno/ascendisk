@@ -40,7 +40,7 @@ class LicenseActivationIT extends ApiIT {
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertFalse(response.getBody().success());
-    assertEquals("Clé invalide.", response.getBody().message());
+    assertEquals("Clé invalide ou champ vide.", response.getBody().message());
   }
 
   @Test

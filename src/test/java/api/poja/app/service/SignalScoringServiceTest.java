@@ -49,15 +49,27 @@ class SignalScoringServiceTest {
   }
 
   @Test
-  void assess_bullishTrendWithNeutralRsi_addsTwentyMomentum() {
+  void assess_bullishTrendWithNeutralRsi_scalesMomentumFromRsi() {
     stub(1.12, 1.10, 50.0, 1.10, 0);
 
     var result = service.assess(ASSET, candles(), false, NOW);
 
-    assertEquals(20, result.momentum());
-    assertEquals(60, result.score());
+    assertEquals(25, result.momentum());
+    assertEquals(65, result.score());
     assertEquals(Direction.NEUTRAL, result.direction());
     assertFalse(result.tradable());
+  }
+
+  @Test
+  void assess_bullishTrendNearCap_keepsScoreBelowEighty() {
+    stub(1.12, 1.10, 58.0, 1.10, 4);
+
+    var result = service.assess(ASSET, candles(), false, NOW);
+
+    assertEquals(17, result.momentum());
+    assertEquals(20, result.zoneStrength());
+    assertEquals(77, result.score());
+    assertEquals(Direction.BUY, result.direction());
   }
 
   @Test

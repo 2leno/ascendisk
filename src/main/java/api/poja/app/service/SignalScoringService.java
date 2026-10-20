@@ -26,6 +26,9 @@ public class SignalScoringService {
   private static final double RSI_OVERBOUGHT = 55.0;
   private static final double RSI_BULLISH_CAP = 60.0;
   private static final double RSI_BEARISH_FLOOR = 40.0;
+  private static final double MOMENTUM_SLOPE = 1.0;
+  private static final double BUY_RSI_MIDPOINT = 55.0;
+  private static final double SELL_RSI_MIDPOINT = 50.0;
 
   private final IndicatorCalculator indicatorCalculator;
   private final EntryZoneDetector entryZoneDetector;
@@ -89,14 +92,29 @@ public class SignalScoringService {
 
   private int momentum(Direction trend, double rsi) {
     if (trend == Direction.BUY) {
-      return rsi < RSI_OVERSOLD ? MOMENTUM_STRONG : rsi < RSI_BULLISH_CAP ? MOMENTUM_NEUTRAL : 0;
+      if (rsi < RSI_OVERSOLD) {
+        return MOMENTUM_STRONG;
+      }
+      if (rsi < RSI_BULLISH_CAP) {
+        return clampMomentum(
+            MOMENTUM_NEUTRAL + (int) Math.round((BUY_RSI_MIDPOINT - rsi) * MOMENTUM_SLOPE));
+      }
+      return 0;
     }
     if (trend == Direction.SELL) {
-      return rsi > RSI_OVERBOUGHT
-          ? MOMENTUM_STRONG
-          : rsi > RSI_BEARISH_FLOOR ? MOMENTUM_NEUTRAL : 0;
+      if (rsi > RSI_OVERBOUGHT) {
+        return MOMENTUM_STRONG;
+      }
+      if (rsi > RSI_BEARISH_FLOOR) {
+        return clampMomentum(
+            MOMENTUM_NEUTRAL + (int) Math.round((rsi - SELL_RSI_MIDPOINT) * MOMENTUM_SLOPE));
+      }
     }
     return 0;
+  }
+
+  private int clampMomentum(int value) {
+    return Math.max(0, Math.min(MOMENTUM_STRONG, value));
   }
 
   private String payout(Asset asset) {
