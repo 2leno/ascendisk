@@ -92,7 +92,7 @@ class LicenseActivationIT extends ApiIT {
     var response = activate(uniqueEmail(), generated.code());
 
     assertFalse(response.getBody().success());
-    assertEquals("Clé désactivée.", response.getBody().message());
+    assertEquals("Clé expirée.", response.getBody().message());
   }
 
   private GeneratedLicenseResponse generateKey(int maxActivations) {

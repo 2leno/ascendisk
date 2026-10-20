@@ -49,7 +49,7 @@ public class LicenseService {
       return new LicenseActivationResponse(false, "Clé invalide.", null);
     }
     if (!key.isActive()) {
-      return new LicenseActivationResponse(false, "Clé désactivée.", null);
+      return new LicenseActivationResponse(false, "Clé expirée.", null);
     }
     if (key.getExpiresAt() != null && key.getExpiresAt().isBefore(clock.instant())) {
       return new LicenseActivationResponse(false, "Clé expirée.", null);
