@@ -6,11 +6,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import api.poja.app.model.Direction;
 import api.poja.app.model.SignalAssessment;
+import api.poja.app.service.SignalAccessPolicy;
 import org.junit.jupiter.api.Test;
 
 class FrontendSignalMapperTest {
 
-  private final FrontendSignalMapper mapper = new FrontendSignalMapper();
+  private final FrontendSignalMapper mapper = new FrontendSignalMapper(new SignalAccessPolicy());
 
   @Test
   void toResponse_mapsTradableSignalToUnlockedCard() {

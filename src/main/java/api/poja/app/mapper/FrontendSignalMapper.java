@@ -2,14 +2,25 @@ package api.poja.app.mapper;
 
 import api.poja.app.endpoint.rest.model.response.FrontendSignalResponse;
 import api.poja.app.model.SignalAssessment;
+import api.poja.app.service.SignalAccessPolicy;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@AllArgsConstructor
 public class FrontendSignalMapper {
 
   private static final double DEFAULT_MULTIPLIER = 1.9;
 
+  private final SignalAccessPolicy accessPolicy;
+
   public FrontendSignalResponse toResponse(SignalAssessment signal, long id) {
+    return toResponse(signal, id, true);
+  }
+
+  public FrontendSignalResponse toResponse(
+      SignalAssessment signal, long id, boolean premium) {
+    var locked = accessPolicy.locked(signal, premium);
     return FrontendSignalResponse.builder()
         .id(id)
         .pair(signal.displayName())
@@ -18,8 +29,8 @@ public class FrontendSignalMapper {
         .direction(signal.direction().name())
         .payout(payout(signal.payout()))
         .multiplier(DEFAULT_MULTIPLIER)
-        .locked(!signal.tradable())
-        .advice(signal.tradable())
+        .locked(locked)
+        .advice(accessPolicy.advice(signal, premium))
         .build();
   }
 

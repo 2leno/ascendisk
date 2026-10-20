@@ -9,6 +9,7 @@ import api.poja.app.mapper.FrontendSignalMapper;
 import api.poja.app.security.FirebaseUser;
 import api.poja.app.service.LicenseService;
 import api.poja.app.service.MemberService;
+import api.poja.app.service.SignalAccessPolicy;
 import api.poja.app.service.SignalService;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -30,6 +31,7 @@ public class FrontendController {
   private final FrontendSignalMapper frontendSignalMapper;
   private final LicenseService licenseService;
   private final MemberService memberService;
+  private final SignalAccessPolicy signalAccessPolicy;
 
   @GetMapping("/signals")
   public List<FrontendSignalResponse> signals(Authentication authentication) {
@@ -39,8 +41,10 @@ public class FrontendController {
     var signals = signalService.currentSignals();
     var premium = hasPremiumAccess(authentication);
     return IntStream.range(0, signals.size())
-        .filter(index -> premium || signals.get(index).tradable())
-        .mapToObj(index -> frontendSignalMapper.toResponse(signals.get(index), index + 1L))
+        .filter(index -> signalAccessPolicy.visible(signals.get(index), premium))
+        .mapToObj(
+            index ->
+                frontendSignalMapper.toResponse(signals.get(index), index + 1L, premium))
         .toList();
   }
 
