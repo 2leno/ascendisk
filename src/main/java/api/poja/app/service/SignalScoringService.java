@@ -19,6 +19,7 @@ public class SignalScoringService {
   private static final int TREND_SCORE = 40;
   private static final int MOMENTUM_STRONG = 40;
   private static final int MOMENTUM_NEUTRAL = 20;
+  private static final int MOMENTUM_FLOOR = 15;
   private static final int ZONE_PER_TOUCH = 5;
   private static final int ZONE_MAX = 20;
   private static final int TRADE_THRESHOLD = 75;
@@ -114,7 +115,7 @@ public class SignalScoringService {
   }
 
   private int clampMomentum(int value) {
-    return Math.max(0, Math.min(MOMENTUM_STRONG, value));
+    return Math.max(MOMENTUM_FLOOR, Math.min(MOMENTUM_STRONG, value));
   }
 
   private String payout(Asset asset) {

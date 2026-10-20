@@ -104,6 +104,19 @@ class SignalScoringServiceTest {
   }
 
   @Test
+  void assess_bearishTrendWithWeakMomentum_keepsScoreTradable() {
+    stub(1.10, 1.12, 42.0, 1.20, 4);
+
+    var result = service.assess(ASSET, candles(), false, NOW);
+
+    assertEquals(15, result.momentum());
+    assertEquals(20, result.zoneStrength());
+    assertEquals(75, result.score());
+    assertEquals(Direction.SELL, result.direction());
+    assertTrue(result.tradable());
+  }
+
+  @Test
   void assess_bearishTrendWithOversoldRsi_addsNoMomentum() {
     stub(1.10, 1.12, 30.0, 1.20, 0);
 
