@@ -42,7 +42,9 @@ public class SecurityConf {
 
   @Bean
   public CorsConfigurationSource corsConfigurationSource(
-      @Value("${app.cors.allowed-origins:http://localhost:2042,http://127.0.0.1:2042}")
+      @Value(
+              "${app.cors.allowed-origins:http://localhost:2042,http://127.0.0.1:2042,"
+                  + "https://ascendisk.pages.dev}")
           String allowedOrigins) {
     var configuration = new CorsConfiguration();
     configuration.setAllowedOrigins(

@@ -40,8 +40,17 @@ class SecurityIT extends ApiIT {
 
   @Test
   void corsPreflight_allowsFrontendOrigin() {
+    assertPreflightAllowed("http://localhost:2042");
+  }
+
+  @Test
+  void corsPreflight_allowsPagesOrigin() {
+    assertPreflightAllowed("https://ascendisk.pages.dev");
+  }
+
+  private void assertPreflightAllowed(String origin) {
     var headers = new HttpHeaders();
-    headers.setOrigin("http://localhost:2042");
+    headers.setOrigin(origin);
     headers.setAccessControlRequestMethod(HttpMethod.GET);
     headers.setAccessControlRequestHeaders(List.of("authorization"));
 
@@ -50,7 +59,7 @@ class SecurityIT extends ApiIT {
             "/signals", HttpMethod.OPTIONS, new HttpEntity<>(headers), String.class);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
-    assertEquals("http://localhost:2042", response.getHeaders().getAccessControlAllowOrigin());
+    assertEquals(origin, response.getHeaders().getAccessControlAllowOrigin());
   }
 
   @Test
