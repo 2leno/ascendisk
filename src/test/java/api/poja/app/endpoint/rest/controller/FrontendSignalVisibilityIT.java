@@ -26,6 +26,8 @@ class FrontendSignalVisibilityIT extends ApiIT {
             List.of(
                 signal(73, true),
                 signal(75, true),
+                signal(76, true),
+                signal(77, true),
                 signal(79, true),
                 signal(80, true),
                 signal(82, false),
@@ -33,13 +35,15 @@ class FrontendSignalVisibilityIT extends ApiIT {
   }
 
   @Test
-  void freeUsers_seeOnlyScoresFrom75_andPremiumScoresAreLocked() {
+  void freeUsers_seeOnlyScoresFrom75_andScoresFrom77AreLocked() {
     var response = get("/api/signals", null, FrontendSignalResponse[].class);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
-    assertArrayEquals(new int[] {75, 79, 80, 82, 85}, scores(response.getBody()));
-    assertArrayEquals(new boolean[] {false, false, true, true, true}, locked(response.getBody()));
-    assertArrayEquals(new boolean[] {true, true, false, false, false}, advice(response.getBody()));
+    assertArrayEquals(new int[] {75, 76, 77, 79, 80, 82, 85}, scores(response.getBody()));
+    assertArrayEquals(
+        new boolean[] {false, false, true, true, true, true, true}, locked(response.getBody()));
+    assertArrayEquals(
+        new boolean[] {true, true, false, false, false, false, false}, advice(response.getBody()));
   }
 
   @Test
@@ -47,9 +51,10 @@ class FrontendSignalVisibilityIT extends ApiIT {
     var response = get("/api/signals", adminFirebaseToken(), FrontendSignalResponse[].class);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
-    assertArrayEquals(new int[] {73, 75, 79, 80, 82, 85}, scores(response.getBody()));
+    assertArrayEquals(new int[] {73, 75, 76, 77, 79, 80, 82, 85}, scores(response.getBody()));
     assertArrayEquals(
-        new boolean[] {false, false, false, false, true, false}, locked(response.getBody()));
+        new boolean[] {false, false, false, false, false, false, true, false},
+        locked(response.getBody()));
   }
 
   private SignalAssessment signal(int score, boolean tradable) {

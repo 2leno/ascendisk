@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 public class SignalAccessPolicy {
 
   public static final int FREE_MIN_SCORE = 75;
-  public static final int PREMIUM_MIN_SCORE = 80;
+  public static final int PREMIUM_MIN_SCORE = 77;
 
   public boolean visible(SignalAssessment signal, boolean premium) {
     if (premium) {
