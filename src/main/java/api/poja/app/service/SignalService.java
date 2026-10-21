@@ -12,12 +12,16 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 @Component
 public class SignalService {
+
+  private static final String DEFAULT_CANDLE_INTERVAL = "1m";
+  private static final Set<String> CANDLE_INTERVALS = Set.of("1m", "2m", "5m", "15m", "30m", "1h");
 
   private final JAssetRepository assetRepository;
   private final AssetMapper assetMapper;
@@ -61,10 +65,17 @@ public class SignalService {
   }
 
   public List<Candle> candles(String symbol, int limit) {
+    return candles(symbol, DEFAULT_CANDLE_INTERVAL, limit);
+  }
+
+  public List<Candle> candles(String symbol, String interval, int limit) {
     if (!assetRepository.existsBySymbol(symbol)) {
       throw notFound();
     }
-    return marketDataClient.minuteCandles(symbol, limit);
+    if (!CANDLE_INTERVALS.contains(interval)) {
+      throw new ApiException(HttpStatus.BAD_REQUEST, "Unsupported candle interval");
+    }
+    return marketDataClient.candles(symbol, interval, limit);
   }
 
   private SignalAssessment assess(Asset asset, boolean otcClosed, Instant evaluatedAt) {

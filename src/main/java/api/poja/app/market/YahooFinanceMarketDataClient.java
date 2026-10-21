@@ -38,13 +38,18 @@ public class YahooFinanceMarketDataClient implements MarketDataClient {
 
   @Override
   public List<Candle> minuteCandles(String symbol, int limit) {
+    return candles(symbol, ONE_MINUTE_INTERVAL, limit);
+  }
+
+  @Override
+  public List<Candle> candles(String symbol, String interval, int limit) {
     try {
       var url =
           baseUrl
               + "/v8/finance/chart/"
               + symbol
               + "?interval="
-              + ONE_MINUTE_INTERVAL
+              + interval
               + "&range="
               + ONE_DAY_RANGE;
       var body = restClient.get().uri(URI.create(url)).retrieve().body(String.class);

@@ -3,6 +3,7 @@ package api.poja.app.endpoint.rest.controller;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import api.poja.app.endpoint.rest.model.response.CandleResponse;
@@ -21,23 +22,35 @@ class CandlesIT extends ApiIT {
 
   @Test
   void candles_returnsRequestedCandles() {
-    when(marketDataClient.minuteCandles(anyString(), anyInt())).thenReturn(candles(10));
+    when(marketDataClient.candles(anyString(), anyString(), anyInt())).thenReturn(candles(10));
 
     var response =
-        get("/assets/EURUSD=X/candles?limit=10", token("TRADER"), CandleResponse[].class);
+        get(
+            "/assets/EURUSD=X/candles?interval=5m&limit=10",
+            token("TRADER"),
+            CandleResponse[].class);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertEquals(10, response.getBody().length);
+    verify(marketDataClient).candles("EURUSD=X", "5m", 10);
   }
 
   @Test
-  void candles_defaultLimit_isUsed() {
-    when(marketDataClient.minuteCandles(anyString(), anyInt())).thenReturn(candles(60));
+  void candles_defaultIntervalAndLimit_areUsed() {
+    when(marketDataClient.candles(anyString(), anyString(), anyInt())).thenReturn(candles(60));
 
     var response = get("/assets/EURUSD=X/candles", token("TRADER"), CandleResponse[].class);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertEquals(60, response.getBody().length);
+    verify(marketDataClient).candles("EURUSD=X", "1m", 60);
+  }
+
+  @Test
+  void candles_unsupportedInterval_returnsBadRequest() {
+    var response = get("/assets/EURUSD=X/candles?interval=7m", token("TRADER"), String.class);
+
+    assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
   }
 
   @Test

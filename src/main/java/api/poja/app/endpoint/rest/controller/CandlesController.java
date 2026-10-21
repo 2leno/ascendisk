@@ -19,7 +19,11 @@ public class CandlesController {
 
   @GetMapping("/assets/{symbol}/candles")
   public List<CandleResponse> candles(
-      @PathVariable String symbol, @RequestParam(defaultValue = "60") int limit) {
-    return signalService.candles(symbol, limit).stream().map(candleMapper::toResponse).toList();
+      @PathVariable String symbol,
+      @RequestParam(defaultValue = "1m") String interval,
+      @RequestParam(defaultValue = "60") int limit) {
+    return signalService.candles(symbol, interval, limit).stream()
+        .map(candleMapper::toResponse)
+        .toList();
   }
 }
