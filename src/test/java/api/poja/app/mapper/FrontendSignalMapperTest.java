@@ -2,6 +2,7 @@ package api.poja.app.mapper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import api.poja.app.model.Direction;
@@ -32,14 +33,17 @@ class FrontendSignalMapperTest {
   void toResponse_mapsNonTradableSignalToLockedCard() {
     var response = mapper.toResponse(signal(0, Direction.NEUTRAL, false, "-"), 1);
 
-    assertEquals(0, response.payout());
+    assertNull(response.price());
+    assertNull(response.direction());
+    assertNull(response.payout());
+    assertNull(response.multiplier());
     assertTrue(response.locked());
     assertFalse(response.advice());
   }
 
   @Test
   void toResponse_withInvalidPayout_usesZero() {
-    var response = mapper.toResponse(signal(50, Direction.SELL, false, "n/a"), 2);
+    var response = mapper.toResponse(signal(50, Direction.SELL, true, "n/a"), 2);
 
     assertEquals(0, response.payout());
   }
