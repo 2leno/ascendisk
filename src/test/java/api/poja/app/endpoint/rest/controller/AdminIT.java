@@ -50,7 +50,7 @@ class AdminIT extends ApiIT {
             GeneratedLicenseResponse.class);
 
     assertEquals(HttpStatus.CREATED, generated.getStatusCode());
-    assertTrue(generated.getBody().code().matches("ASC(-[A-Z2-9]{4}){3}"));
+    assertTrue(generated.getBody().code().matches("ASK(-[A-Z2-9]{4}){3}"));
     assertNotNull(generated.getBody().key().id());
 
     var keys = get("/api/admin/keys", adminFirebaseToken(), LicenseKeyResponse[].class);

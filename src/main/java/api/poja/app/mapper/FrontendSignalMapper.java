@@ -24,12 +24,13 @@ public class FrontendSignalMapper {
         .id(id)
         .pair(signal.displayName())
         .score(signal.score())
-        .price(signal.currentPrice())
-        .direction(signal.direction().name())
-        .payout(payout(signal.payout()))
-        .multiplier(DEFAULT_MULTIPLIER)
+        .price(locked ? null : signal.currentPrice())
+        .direction(locked ? null : signal.direction().name())
+        .payout(locked ? null : payout(signal.payout()))
+        .multiplier(locked ? null : DEFAULT_MULTIPLIER)
         .locked(locked)
         .advice(accessPolicy.advice(signal, premium))
+        .updatedAt(signal.evaluatedAt())
         .build();
   }
 

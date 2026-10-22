@@ -72,7 +72,7 @@ class LicenseServiceTest {
         JLicenseKey.builder()
             .id(UUID.randomUUID())
             .codeHash("hash")
-            .codePrefix("ASC-ABCD-")
+            .codePrefix("ASK-ABCD-")
             .maxActivations(1)
             .activationCount(0)
             .expiresAt(Instant.parse("2024-01-02T12:00:00Z"))
@@ -81,7 +81,7 @@ class LicenseServiceTest {
             .build();
     when(keyRepository.findByCodeHash(any())).thenReturn(Optional.of(expiredKey));
 
-    var response = service.activate(null, "ASC-ABCD-EFGH-IJKL");
+    var response = service.activate(null, "ASK-ABCD-EFGH-IJKL");
 
     assertFalse(response.success());
     assertEquals("Clé expirée.", response.message());
@@ -94,7 +94,7 @@ class LicenseServiceTest {
 
     var generated = service.generate(new CreateLicenseKeyRequest("Test", 1, null), null);
 
-    assertTrue(generated.code().matches("ASC(-[A-Z2-9]{4}){3}"));
+    assertTrue(generated.code().matches("ASK(-[A-Z2-9]{4}){3}"));
     assertEquals(1, generated.key().maxActivations());
   }
 

@@ -36,6 +36,26 @@ class CandlesIT extends ApiIT {
   }
 
   @Test
+  void candles_arePublic() {
+    when(marketDataClient.candles(anyString(), anyString(), anyInt())).thenReturn(candles(10));
+
+    var response =
+        get("/assets/EURUSD=X/candles?interval=1m&limit=10", null, CandleResponse[].class);
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertEquals(10, response.getBody().length);
+  }
+
+  @Test
+  void candles_whenMarketDataIsUnavailable_returnsServiceUnavailable() {
+    when(marketDataClient.candles(anyString(), anyString(), anyInt())).thenReturn(List.of());
+
+    var response = get("/assets/EURUSD=X/candles", null, String.class);
+
+    assertEquals(HttpStatus.SERVICE_UNAVAILABLE, response.getStatusCode());
+  }
+
+  @Test
   void candles_defaultIntervalAndLimit_areUsed() {
     when(marketDataClient.candles(anyString(), anyString(), anyInt())).thenReturn(candles(60));
 

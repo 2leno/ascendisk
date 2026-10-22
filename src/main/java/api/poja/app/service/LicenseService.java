@@ -231,7 +231,7 @@ public class LicenseService {
 
   private String newCode() {
     var random = new SecureRandom();
-    var builder = new StringBuilder("ASC");
+    var builder = new StringBuilder("ASK");
     for (var group = 0; group < 3; group++) {
       builder.append('-');
       for (var index = 0; index < 4; index++) {

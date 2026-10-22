@@ -1,5 +1,6 @@
 package api.poja.app.endpoint.rest.model.response;
 
+import java.time.Instant;
 import lombok.Builder;
 
 @Builder
@@ -7,9 +8,10 @@ public record FrontendSignalResponse(
     long id,
     String pair,
     int score,
-    double price,
+    Double price,
     String direction,
-    double payout,
-    double multiplier,
+    Double payout,
+    Double multiplier,
     boolean locked,
-    boolean advice) {}
+    boolean advice,
+    Instant updatedAt) {}

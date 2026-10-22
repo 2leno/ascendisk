@@ -88,6 +88,8 @@ public class SecurityConf {
                     .permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/signals")
                     .permitAll()
+                    .requestMatchers(HttpMethod.GET, "/assets/*/candles")
+                    .permitAll()
                     .requestMatchers("/api/admin/**")
                     .hasRole("ADMIN")
                     .requestMatchers(HttpMethod.POST, "/assets", "/assets/**")

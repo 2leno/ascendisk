@@ -75,7 +75,11 @@ public class SignalService {
     if (!CANDLE_INTERVALS.contains(interval)) {
       throw new ApiException(HttpStatus.BAD_REQUEST, "Unsupported candle interval");
     }
-    return marketDataClient.candles(symbol, interval, limit);
+    var candles = marketDataClient.candles(symbol, interval, limit);
+    if (candles.isEmpty()) {
+      throw new ApiException(HttpStatus.SERVICE_UNAVAILABLE, "Market data unavailable");
+    }
+    return candles;
   }
 
   private SignalAssessment assess(Asset asset, boolean otcClosed, Instant evaluatedAt) {

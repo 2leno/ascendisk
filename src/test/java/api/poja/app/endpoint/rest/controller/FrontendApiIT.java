@@ -2,6 +2,8 @@ package api.poja.app.endpoint.rest.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -50,10 +52,36 @@ class FrontendApiIT extends ApiIT {
             .orElseThrow();
     assertTrue(eurusd.id() > 0);
     assertTrue(eurusd.score() >= 0);
-    assertTrue(eurusd.price() > 0);
-    assertTrue(List.of("BUY", "SELL", "NEUTRAL").contains(eurusd.direction()));
-    assertEquals(1.9, eurusd.multiplier());
+    assertNotNull(eurusd.updatedAt());
     assertTrue(eurusd.locked() != eurusd.advice());
+    if (eurusd.locked()) {
+      assertNull(eurusd.price());
+      assertNull(eurusd.direction());
+      assertNull(eurusd.payout());
+      assertNull(eurusd.multiplier());
+    } else {
+      assertTrue(eurusd.price() > 0);
+      assertTrue(List.of("BUY", "SELL", "NEUTRAL").contains(eurusd.direction()));
+      assertEquals(1.9, eurusd.multiplier());
+    }
+  }
+
+  @Test
+  void lockedSignals_doNotExposePremiumFields() {
+    when(marketDataClient.minuteCandles(anyString(), anyInt())).thenReturn(risingCandles());
+
+    var response = get("/api/signals", null, FrontendSignalResponse[].class);
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertTrue(
+        Arrays.stream(response.getBody())
+            .filter(FrontendSignalResponse::locked)
+            .allMatch(
+                signal ->
+                    signal.price() == null
+                        && signal.direction() == null
+                        && signal.payout() == null
+                        && signal.multiplier() == null));
   }
 
   @Test
@@ -77,8 +105,7 @@ class FrontendApiIT extends ApiIT {
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertTrue(Arrays.stream(response.getBody()).allMatch(FrontendSignalResponse::locked));
     assertTrue(Arrays.stream(response.getBody()).allMatch(signal -> signal.score() == 0));
-    assertTrue(
-        Arrays.stream(response.getBody()).allMatch(signal -> signal.direction().equals("NEUTRAL")));
+    assertTrue(Arrays.stream(response.getBody()).allMatch(signal -> signal.direction() == null));
   }
 
   @Test
